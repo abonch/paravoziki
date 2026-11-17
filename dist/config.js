@@ -1,0 +1,1 @@
+globalThis.PARAVOZIKI_API_BASE="";
