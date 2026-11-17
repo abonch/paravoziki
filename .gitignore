@@ -6,3 +6,6 @@ node_modules/
 *.log
 rhythm-*.json
 .openai/.local/
+
+.data/
+dist/server/

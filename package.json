@@ -1,1 +1,19 @@
-{"name":"rhythm-time-blocks","version":"0.1.0","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test tests/*.test.mjs","check":"node --check dist/app.js && node --check dist/model.js"},"license":"MIT"}
+{
+  "name": "rhythm-time-blocks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check dist/app.js && node --check dist/model.js",
+    "build": "node scripts/build.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
