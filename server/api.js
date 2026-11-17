@@ -1,3 +1,4 @@
+import {telegramAccount,telegramWebhook} from './telegram.js';
 import bcrypt from 'bcryptjs';
 const SESSION_AGE=7*86400,MAX_BYTES=1048576;
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
@@ -31,6 +32,7 @@ async function coreAPI(request,env){const db=env.DB,path=new URL(request.url).pa
  if(path==='/api/auth/me')return json({user});
  if(!user)return json({error:'Войдите в аккаунт.'},401);
  if(path==='/api/auth/logout'&&method==='POST'){const token=request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1]||request.headers.get('cookie')?.match(/pz_session=([a-f0-9]{64})/)?.[1];if(token)await db.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await digest(token)).run();return json({ok:true},200,{'Set-Cookie':cookie(request,'',0)});}
+ if(path.startsWith('/api/telegram/'))return telegramAccount(request,env,user,data);
  if(path==='/api/plan'&&method==='GET'){const row=await db.prepare('SELECT state_json,revision FROM user_plans WHERE user_id = ?').bind(user.id).first();return json(row?{state:JSON.parse(row.state_json),revision:row.revision}:{state:null,revision:0});}
  if(path==='/api/plan'&&method==='PUT'){
   if(!validPlan(data.state)||!Number.isInteger(data.revision)||data.revision<0)return json({error:'Некорректный формат плана.'},400);
@@ -45,4 +47,4 @@ async function coreAPI(request,env){const db=env.DB,path=new URL(request.url).pa
 }
 
 function trustedOrigin(request,env){const origin=request.headers.get('origin');return origin===new URL(request.url).origin||!!env.PUBLIC_APP_ORIGIN&&origin===env.PUBLIC_APP_ORIGIN;}
-export async function api(request,env){const origin=request.headers.get('origin'),external=origin===env.PUBLIC_APP_ORIGIN&&!!origin;if(request.method==='OPTIONS'){if(!trustedOrigin(request,env))return json({error:'Origin rejected'},403);return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, POST, PUT, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization','Access-Control-Max-Age':'600','Vary':'Origin'}});}if(origin&&!trustedOrigin(request,env))return json({error:'Запрос отклонён.'},403);const response=await coreAPI(request,env);if(!external)return response;const headers=new Headers(response.headers);headers.set('Access-Control-Allow-Origin',origin);headers.set('Vary','Origin');return new Response(response.body,{status:response.status,headers});}
+export async function api(request,env){if(new URL(request.url).pathname.startsWith('/api/telegram/hook/'))return telegramWebhook(request,env);const origin=request.headers.get('origin'),external=origin===env.PUBLIC_APP_ORIGIN&&!!origin;if(request.method==='OPTIONS'){if(!trustedOrigin(request,env))return json({error:'Origin rejected'},403);return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, POST, PUT, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization','Access-Control-Max-Age':'600','Vary':'Origin'}});}if(origin&&!trustedOrigin(request,env))return json({error:'Запрос отклонён.'},403);const response=await coreAPI(request,env);if(!external)return response;const headers=new Headers(response.headers);headers.set('Access-Control-Allow-Origin',origin);headers.set('Vary','Origin');return new Response(response.body,{status:response.status,headers});}
