@@ -41,3 +41,7 @@ export function stashTask(state,id){const task=state.tasks.find(t=>t.id===id);if
 export function deleteTask(state,id){for(const source of ['tasks','backlog']){const list=state[source]||[],index=list.findIndex(t=>t.id===id);if(index>=0)return {source,index,task:list.splice(index,1)[0]};}return null;}
 export function restoreTask(state,record){if(!record||findTask(state,record.task.id))return false;const list=state[record.source] ||= [];list.splice(Math.min(record.index,list.length),0,record.task);return true;}
 export function suggestStart(state,date,duration){const occupied=[...state.slots.filter(s=>s.date===date),...state.unavailable.filter(e=>unavailableOn(e,date))];for(let n=540;n+duration<=1440;n+=15){const start=endTime('00:00',n);if(!occupied.some(s=>overlap(s,{start,duration})))return start;}return '09:00';}
+
+export function pastMinutes(date,now=new Date()){const today=dateKey(now);return date<today?1440:date>today?0:now.getHours()*60+now.getMinutes()+now.getSeconds()/60;}
+export function canSchedule(date,start,now=new Date()){return date>=dateKey(now)&&minutes(start)>=pastMinutes(date,now);}
+export function canPlaceInSlot(slot,now=new Date()){return slot.date>=dateKey(now)&&minutes(slot.start)+slot.duration>pastMinutes(slot.date,now);}
