@@ -62,3 +62,7 @@ export function changeSlotTiming(state,id,date,start,duration,now=new Date()){
 }
 export function scheduleNewTask(state,task,now=new Date()){if(!task.date)return task;const matching=slotsOn(state,task.date).filter(s=>s.category===task.category).sort((a,b)=>a.start.localeCompare(b.start)),future=matching.find(s=>s.id===task.slotId&&canPlaceInSlot(s,now))||matching.find(s=>canPlaceInSlot(s,now));if(future){task.slotId=future.id;delete task.unscheduled;}else if(matching.length){delete task.slotId;task.unscheduled=true;}return task;}
 export function emptyPlan(){return {version:1,categories:['#8b81c9','#cf885f','#7c9a7d'].map((color,i)=>({id:'block-'+(i+1),name:'Вагончик '+(i+1),tag:'вагончик'+(i+1),color})),template:[],slots:[],tasks:[],backlog:[],unavailable:[],moves:[],baselines:{},reviews:{},sessions:[],timer:null,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};}
+
+// One backlog includes undated ideas and legacy scheduled work that needs a place.
+export function backlogTasks(state){const seen=new Set(),result=[];for(const t of [...(state.backlog||[]),...inboxTasks(state).map(x=>x.task)])if(!t.done&&!seen.has(t.id)){seen.add(t.id);result.push(t);}return result;}
+export function backlogCounts(state){const tasks=backlogTasks(state);return {total:tasks.length,unassigned:tasks.filter(t=>!t.category||!state.categories.some(c=>c.id===t.category)).length,byCategory:Object.fromEntries(state.categories.map(c=>[c.id,tasks.filter(t=>t.category===c.id).length]))};}
