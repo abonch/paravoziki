@@ -100,3 +100,5 @@ Google Calendar подключается в «Настройках» через 
 Раздел «Входящие» объединён с накопителем. Новые дела из приложения и Telegram по умолчанию сохраняются без даты. Уже существующие нераспределённые и не поместившиеся дела показываются там же, без изменения истории. Форма быстрого добавления находится над шкалой часов; счётчики неразобранных дел и значок обновления — над накопителем. Дело можно сохранить без вагончика: оно отображается белым.
 
 Крестик у импортированного события Google Calendar скрывает локальную копию, не удаляя оригинал в Google. Скрытые копии не восстанавливаются при очередной синхронизации.
+
+Imported calendar occurrences support local title, category/color and duration edits. calendarOverrides are account-scoped, sanitized and reapplied after each iCal sync; Google Calendar is never modified. Edits apply to the selected occurrence only.

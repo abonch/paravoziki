@@ -1,3 +1,4 @@
+import {sanitizeCalendarOverrides,applyCalendarOverrides} from './calendar-overrides.js';
 import {telegramAccount,telegramWebhook} from './telegram.js';
 import {calendarAccount} from './calendar.js';
 import bcrypt from 'bcryptjs';
@@ -40,7 +41,7 @@ async function coreAPI(request,env){const db=env.DB,path=new URL(request.url).pa
  if(path==='/api/plan'&&method==='PUT'){
   if(!validPlan(data.state)||!Number.isInteger(data.revision)||data.revision<0)return json({error:'Некорректный формат плана.'},400);
   // Running focus sessions are synced as timestamps, never as active intervals on the server.
-  const existing=await db.prepare('SELECT state_json FROM user_plans WHERE user_id=?').bind(user.id).first();const hidden=Array.isArray(data.state.calendarHiddenIds)?data.state.calendarHiddenIds.filter(id=>typeof id==='string'&&/^gcal-[a-z0-9-]+$/.test(id)).slice(0,2000):(existing?JSON.parse(existing.state_json).calendarHiddenIds||[]:[]);data.state.calendarHiddenIds=hidden;const imported=existing?JSON.parse(existing.state_json).unavailable.filter(e=>e.source==='google'&&!hidden.includes(e.id)):[];data.state.unavailable=[...data.state.unavailable.filter(e=>e.source!=='google'),...imported];
+  const existing=await db.prepare('SELECT state_json FROM user_plans WHERE user_id=?').bind(user.id).first();const hidden=Array.isArray(data.state.calendarHiddenIds)?data.state.calendarHiddenIds.filter(id=>typeof id==='string'&&/^gcal-[a-z0-9-]+$/.test(id)).slice(0,2000):(existing?JSON.parse(existing.state_json).calendarHiddenIds||[]:[]);data.state.calendarHiddenIds=hidden;data.state.calendarOverrides=sanitizeCalendarOverrides(data.state.calendarOverrides===undefined&&existing?JSON.parse(existing.state_json).calendarOverrides:data.state.calendarOverrides,data.state.categories);const imported=existing?JSON.parse(existing.state_json).unavailable.filter(e=>e.source==='google'&&!hidden.includes(e.id)):[];data.state.unavailable=[...data.state.unavailable.filter(e=>e.source!=='google'),...applyCalendarOverrides(imported,data.state.calendarOverrides)];
   const args=[JSON.stringify(data.state),Date.now(),user.id,data.revision];let row;
   if(data.revision===0){row=await db.prepare('INSERT INTO user_plans (state_json,updated_at,user_id,revision) VALUES (?,?,?,1) ON CONFLICT(user_id) DO NOTHING RETURNING revision').bind(...args.slice(0,3)).first();}
   else row=await db.prepare('UPDATE user_plans SET state_json=?,updated_at=?,revision=revision+1 WHERE user_id=? AND revision=? RETURNING revision').bind(...args).first();
