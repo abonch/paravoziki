@@ -40,3 +40,6 @@
 .rail-entry{container-type:inline-size;container-name:coach}
 @container coach (max-width:85px){.coach-toolbar{display:none}.coach-open{padding:8px 4px;justify-content:center}.coach-load-label{font-size:10px}.coach-open strong,.busy-coach-label strong{font-size:12px}.busy-coach-label{padding:8px 4px}.coach-segments{gap:1px}}
 button.busy-coach-label{width:100%;text-align:left;border:0;border-radius:6px;background:transparent;color:inherit}
+.coach-open{cursor:grab;touch-action:none}.coach-resize{position:absolute;top:24px;bottom:8px;width:7px;padding:0;border:0;border-radius:4px;background:#48613c44;cursor:ew-resize;touch-action:none;z-index:4}.coach-resize-start{left:-3px}.coach-resize-end{right:-3px}.coach-resize:hover,.coach-resize:focus-visible{background:#48613caa}.is-coach-dragging,.is-coach-dragging *{cursor:grabbing!important;user-select:none!important}.coach-gesture-preview .coach-toolbar,.coach-gesture-preview .coach-resize{display:none}
+.calendar-coach-mark{font-size:12px;color:#56654e;padding:2px 5px}.rail-busy .calendar-coach-mark{pointer-events:none}
+.account-onboarding{display:grid;gap:8px}.account-onboarding h2{font-size:16px;margin:0}.account-onboarding button{font-size:14px}.wagon-empty{align-items:center}.wagon-empty>span{font-size:22px}

@@ -1,4 +1,5 @@
 import {telegramAccount,telegramWebhook} from './telegram.js';
+import {calendarAccount} from './calendar.js';
 import bcrypt from 'bcryptjs';
 const SESSION_AGE=7*86400,MAX_BYTES=1048576;
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
@@ -32,12 +33,14 @@ async function coreAPI(request,env){const db=env.DB,path=new URL(request.url).pa
  if(path==='/api/auth/me')return json({user});
  if(!user)return json({error:'Войдите в аккаунт.'},401);
  if(path==='/api/auth/logout'&&method==='POST'){const token=request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1]||request.headers.get('cookie')?.match(/pz_session=([a-f0-9]{64})/)?.[1];if(token)await db.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await digest(token)).run();return json({ok:true},200,{'Set-Cookie':cookie(request,'',0)});}
+ if(path.startsWith('/api/calendar/'))return calendarAccount(request,env,user,data);
  if(path.startsWith('/api/telegram/'))return telegramAccount(request,env,user,data);
  if(path==='/api/plan/version'&&method==='GET'){const row=await db.prepare('SELECT revision FROM user_plans WHERE user_id = ?').bind(user.id).first();return json({revision:row?.revision||0});}
  if(path==='/api/plan'&&method==='GET'){const row=await db.prepare('SELECT state_json,revision FROM user_plans WHERE user_id = ?').bind(user.id).first();return json(row?{state:JSON.parse(row.state_json),revision:row.revision}:{state:null,revision:0});}
  if(path==='/api/plan'&&method==='PUT'){
   if(!validPlan(data.state)||!Number.isInteger(data.revision)||data.revision<0)return json({error:'Некорректный формат плана.'},400);
   // Running focus sessions are synced as timestamps, never as active intervals on the server.
+  const existing=await db.prepare('SELECT state_json FROM user_plans WHERE user_id=?').bind(user.id).first();const imported=existing?JSON.parse(existing.state_json).unavailable.filter(e=>e.source==='google'):[];data.state.unavailable=[...data.state.unavailable.filter(e=>e.source!=='google'),...imported];
   const args=[JSON.stringify(data.state),Date.now(),user.id,data.revision];let row;
   if(data.revision===0){row=await db.prepare('INSERT INTO user_plans (state_json,updated_at,user_id,revision) VALUES (?,?,?,1) ON CONFLICT(user_id) DO NOTHING RETURNING revision').bind(...args.slice(0,3)).first();}
   else row=await db.prepare('UPDATE user_plans SET state_json=?,updated_at=?,revision=revision+1 WHERE user_id=? AND revision=? RETURNING revision').bind(...args).first();

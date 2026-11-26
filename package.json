@@ -12,7 +12,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^3.0.3"
+    "bcryptjs": "^3.0.3",
+    "ical.js": "^2.2.1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

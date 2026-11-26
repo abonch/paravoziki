@@ -1,0 +1,1 @@
+CREATE TABLE google_calendars (user_id TEXT PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE, url_cipher TEXT NOT NULL, last_sync INTEGER NOT NULL DEFAULT 0, range_from TEXT, range_to TEXT, sync_error TEXT);
