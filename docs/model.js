@@ -45,3 +45,8 @@ export function suggestStart(state,date,duration){const occupied=[...state.slots
 export function pastMinutes(date,now=new Date()){const today=dateKey(now);return date<today?1440:date>today?0:now.getHours()*60+now.getMinutes()+now.getSeconds()/60;}
 export function canSchedule(date,start,now=new Date()){return date>=dateKey(now)&&minutes(start)>=pastMinutes(date,now);}
 export function canPlaceInSlot(slot,now=new Date()){return slot.date>=dateKey(now)&&minutes(slot.start)+slot.duration>pastMinutes(slot.date,now);}
+
+// Planned occupancy belongs to an individual interval, including completed tasks.
+// A partial final quarter-hour retains its exact capacity and fill ratio.
+export function slotOccupancy(state,slot){const planned=tasksInSlot(state,slot).reduce((sum,t)=>sum+t.estimate,0),capacity=slot.duration;return {planned,capacity,overflow:Math.max(0,planned-capacity),segments:Array.from({length:Math.ceil(capacity/15)},(_,i)=>{const size=Math.min(15,capacity-i*15);return {minutes:size,filled:Math.max(0,Math.min(1,(planned-i*15)/size))};})};}
+export function timelineLanes(entries){const ends=[];return [...entries].sort((a,b)=>minutes(a.start)-minutes(b.start)).map(e=>{const start=minutes(e.start);let lane=ends.findIndex(end=>end<=start);if(lane<0)lane=ends.length;ends[lane]=start+e.duration;return {...e,lane};});}

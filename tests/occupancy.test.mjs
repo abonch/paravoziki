@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {slotOccupancy,timelineLanes} from '../dist/model.js';
+const slot={id:'a',category:'work',date:'2026-11-26',start:'09:00',duration:120};
+const task=(id,estimate,slotId='a',done=false)=>({id,category:'work',date:slot.date,estimate,slotId,done});
+const state=tasks=>({slots:[slot,{...slot,id:'b',start:'14:00'}],tasks});
+test('two-hour wagon has eight quarters, 45 minutes fills three',()=>{const o=slotOccupancy(state([task('t',45)]),slot);assert.equal(o.segments.length,8);assert.deepEqual(o.segments.map(s=>s.filled),[1,1,1,0,0,0,0,0]);assert.equal(o.overflow,0);});
+test('separate wagons do not duplicate their category daily load',()=>{const s=state([task('a',30),task('b',60,'b')]);assert.equal(slotOccupancy(s,slot).planned,30);assert.equal(slotOccupancy(s,s.slots[1]).planned,60);});
+test('non-quarter estimates are not rounded up; partial capacity is exact',()=>{const short={...slot,duration:50},o=slotOccupancy({...state([task('a',47)]),slots:[short]},short);assert.deepEqual(o.segments.map(s=>s.minutes),[15,15,15,5]);assert.deepEqual(o.segments.map(s=>s.filled),[1,1,1,.4]);assert.equal(o.capacity,50);});
+test('completed tasks still reserve planned time; overfill never spills out of scale',()=>{const o=slotOccupancy(state([task('a',150,'a',true)]),slot);assert.equal(o.planned,150);assert.equal(o.overflow,30);assert.ok(o.segments.every(s=>s.filled===1));});
+test('overlapping events get separate tracks; adjacent events reuse a track',()=>{const a=[{id:'a',start:'09:00',duration:60},{id:'b',start:'09:30',duration:120},{id:'c',start:'10:00',duration:30}];assert.deepEqual(timelineLanes(a).map(e=>e.lane),[0,1,0]);assert.equal(a[0].lane,undefined);});
