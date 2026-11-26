@@ -23,7 +23,7 @@ test('Google calendar connection is encrypted, isolated, updates without duplica
  const env={...database(),BOT_ENCRYPTION_KEY:'1'.repeat(64)};env.sql.exec(await readFile(new URL('../drizzle/0002_google_calendar.sql',import.meta.url),'utf8'));
  const signup1=await signup(env,'calendar@example.test'),cookie1=signup1.headers.get('set-cookie').split(';')[0],signup2=await signup(env,'other-cal@example.test'),cookie2=signup2.headers.get('set-cookie').split(';')[0];
  const feed='https://calendar.google.com/calendar/ical/test%40gmail.com/private-secret123/basic.ics';const originalFetch=globalThis.fetch;let fail=false;
- globalThis.fetch=async()=>fail?new Response('unavailable',{status:503}):new Response('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:meeting\r\nDTSTART:20261127T090000Z\r\nDTEND:20261127T100000Z\r\nSUMMARY:Private meeting\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n');
+ globalThis.fetch=async(url,init)=>{assert.equal(init.redirect,'manual','Cloudflare Workers supports manual/follow, not error');return fail?new Response('unavailable',{status:503}):new Response('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:meeting\r\nDTSTART:20261127T090000Z\r\nDTEND:20261127T100000Z\r\nSUMMARY:Private meeting\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n');};
  try{
  const payload={url:feed,from:'2026-11-23',to:'2026-11-30',timezone:'Europe/Vienna'};
  const res=await api(request('/api/calendar/connect',{method:'POST',cookie:cookie1,data:payload}),env);assert.equal(res.status,200);const connected=await res.json();assert.equal(connected.count,1);assert.ok(!JSON.stringify(connected).includes('secret123'));
