@@ -48,7 +48,8 @@ export function canPlaceInSlot(slot,now=new Date()){return slot.date>=dateKey(no
 
 // Planned occupancy belongs to an individual interval, including completed tasks.
 // A partial final quarter-hour retains its exact capacity and fill ratio.
-export function slotOccupancy(state,slot){const planned=tasksInSlot(state,slot).reduce((sum,t)=>sum+t.estimate,0),capacity=slot.duration;return {planned,capacity,overflow:Math.max(0,planned-capacity),segments:Array.from({length:Math.ceil(capacity/15)},(_,i)=>{const size=Math.min(15,capacity-i*15);return {minutes:size,filled:Math.max(0,Math.min(1,(planned-i*15)/size))};})};}
+export function slotOccupancy(state,slot){const tasks=tasksInSlot(state,slot),planned=tasks.reduce((sum,t)=>sum+t.estimate,0),capacity=slot.duration;let offset=0;const ranges=tasks.map(t=>{const range={start:offset,end:offset+t.estimate,done:t.done};offset=range.end;return range;});return {planned,capacity,completed:tasks.filter(t=>t.done).reduce((n,t)=>n+t.estimate,0),overflow:Math.max(0,planned-capacity),segments:Array.from({length:Math.ceil(capacity/15)},(_,i)=>{const start=i*15,size=Math.min(15,capacity-start),completed=ranges.filter(t=>t.done).reduce((n,t)=>n+Math.max(0,Math.min(start+size,t.end)-Math.max(start,t.start)),0);return {minutes:size,filled:Math.max(0,Math.min(1,(planned-start)/size)),completed};})};}
+
 export function timelineLanes(entries){const ends=[];return [...entries].sort((a,b)=>minutes(a.start)-minutes(b.start)).map(e=>{const start=minutes(e.start);let lane=ends.findIndex(end=>end<=start);if(lane<0)lane=ends.length;ends[lane]=start+e.duration;return {...e,lane};});}
 
 export function changeSlotTiming(state,id,date,start,duration,now=new Date()){
