@@ -60,3 +60,9 @@ button.busy-coach-label{width:100%;text-align:left;border:0;border-radius:6px;ba
 .task-duration-control{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}.task-duration-control .duration-step{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:1px solid #9aa58c80;border-radius:5px;background:#ffffff88;font-size:17px;line-height:1}.task-duration-control .duration-step:hover{background:white}.task-duration-control .duration-step:disabled{opacity:.35;cursor:default}.coach-details>details:first-child{margin-top:0}
 
 .interval-settings>summary{display:flex;align-items:center;gap:10px;list-style:none;font-weight:400}.interval-settings>summary::-webkit-details-marker{display:none}.interval-pencil{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#526747;font-size:21px}.interval-settings>summary:hover .interval-pencil{background:#e5eadf}.interval-settings[open]>summary .interval-pencil{background:#e5eadf}
+
+/* Retain category hue in both upcoming and elapsed wagons. Neutral events stay gray. */
+.rail-coach:not(.rail-busy),.rail-busy.calendar-categorized{background:color-mix(in srgb,var(--color) 60%,white);border-color:color-mix(in srgb,var(--color) 90%,#24303e)}
+.rail-elapsed .rail-coach:not(.rail-busy),.rail-elapsed .rail-busy.calendar-categorized{background:color-mix(in srgb,var(--color) 50%,white);border-color:color-mix(in srgb,var(--color) 85%,#24303e)}
+.rail-busy:not(.calendar-categorized),.rail-elapsed .rail-busy:not(.calendar-categorized){background:#dedee3;border-color:#85858f;color:#303039}
+.busy-coach-label{width:100%;border:0;background:transparent;border-radius:5px;text-align:left;color:inherit}.busy-coach-label:hover{background:#ffffff25}
